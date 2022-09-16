@@ -10,8 +10,10 @@ async function doAuth() {
   auth = await getAuthToken();
 }
 
+let time = null;
+
 async function loop() {
-  console.time('timing');
+  time = Date.now();
   try {
     const sheetData = await getSpreadSheetValues(spreadsheetId, auth, `${spreadsheetName}!A1:C10`);
     const values = sheetData.data.values;
@@ -23,8 +25,7 @@ async function loop() {
   } catch (error) {
     console.error(error.message, error.stack);
   } finally {
-    console.timeEnd('timing');
-    setTimeout(() => loop(), 1e4);
+    setTimeout(() => loop(), 15e3 - (Date.now() - time));
   }
 }
 
