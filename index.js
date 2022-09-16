@@ -13,12 +13,12 @@ async function doAuth() {
 async function loop() {
   console.time('timing');
   try {
-    const sheetData = await getSpreadSheetValues(spreadsheetId, auth, `${spreadsheetName}!A1:B10`);
+    const sheetData = await getSpreadSheetValues(spreadsheetId, auth, `${spreadsheetName}!A1:C10`);
     const values = sheetData.data.values;
     const niftyData = await getData();
-    const filterData = niftyData.filter(n => values.some(v => n.strikePrice == v[0])).map(f => ({ ...f, CE: f.CE.lastPrice, PE: f.PE.lastPrice }));
-    const cmp = values.map(v => String(filterData.find(f => f.strikePrice == v[0])[v[1]]));
-    const update = await updateSpreadSheetValues(spreadsheetId, auth, `${spreadsheetName}!C1:C10`, [cmp]);
+    const filterData = niftyData.filter(n => values.some(v => (n.expiryDate == v[0] && n.strikePrice == v[1])));
+    const cmp = values.map(v => String(filterData.find(f => (f.expiryDate == v[0] && f.strikePrice == v[1]))[v[2]]?.lastPrice));
+    const update = await updateSpreadSheetValues(spreadsheetId, auth, `${spreadsheetName}!D1:D10`, [cmp]);
     console.log(update.data.updatedRange, update.data.updatedCells);
   } catch (error) {
     console.error(error.message, error.stack);
@@ -30,12 +30,13 @@ async function loop() {
 
 function getData() {
   return new Promise((resolve, reject) => {
-    exec(`curl 'https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY' -H 'authority: www.nseindia.com' -H 'cache-control: max-age=0' -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36' --compressed`,
+    exec(
+      `curl 'https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY' -H 'authority: www.nseindia.com' -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' -H 'accept-language: en-GB,en;q=0.9' -H 'sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="104"' -H 'sec-ch-ua-mobile: ?0' -H 'sec-ch-ua-platform: "Linux"' -H 'sec-fetch-dest: document' -H 'sec-fetch-mode: navigate' -H 'sec-fetch-site: none' -H 'sec-fetch-user: ?1' -H 'upgrade-insecure-requests: 1' -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36' --compressed`,
       (error, stdout) => {
         if (error) return reject(error);
         try {
           const json = JSON.parse(stdout);
-          const data = json.filtered.data;
+          const data = json.records.data;
           resolve(data);
         } catch (error) {
           reject(error)
