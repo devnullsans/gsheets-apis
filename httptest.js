@@ -33,7 +33,7 @@ function makeReq() {
         gzip.once('end', () => {
           try {
             const parsedData = JSON.parse(rawData);
-            resolve(parsedData);
+            resolve(parsedData.records.data);
           } catch (e) {
             reject(e);
           }
@@ -46,7 +46,7 @@ function makeReq() {
         res.once('end', () => {
           try {
             const parsedData = JSON.parse(rawData);
-            resolve(parsedData);
+            resolve(parsedData.records.data);
           } catch (e) {
             reject(e);
           }
@@ -56,4 +56,6 @@ function makeReq() {
   });
 }
 
-makeReq().then(console.log).catch(console.error);
+// makeReq().then(console.log).catch(console.error);
+
+module.exports = makeReq;

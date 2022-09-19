@@ -24,11 +24,8 @@ async function getSpreadSheetValues(spreadsheetId, auth, range) {
 async function updateSpreadSheetValues(spreadsheetId, auth, range, values) {
   return await sheets.spreadsheets.values.update({
     spreadsheetId, auth, range,
-    valueInputOption: 'USER_ENTERED',
-    requestBody: {
-      range, values,
-      majorDimension: 'COLUMNS'
-    }
+    valueInputOption: 'RAW',
+    requestBody: { values, majorDimension: 'COLUMNS' }
   })
 }
 
